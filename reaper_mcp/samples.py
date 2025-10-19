@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -8,6 +9,8 @@ import reapy
 
 from reaper_mcp.mcp_core import mcp
 from reaper_mcp.util import _load_sample_dirs, _save_sample_dirs
+
+logger = logging.getLogger(__name__)
 
 
 @mcp.tool()
@@ -71,21 +74,37 @@ def search_samples(query: Optional[str] = None, exts: Optional[List[str]] = None
 def import_sample_to_track(track_index: int, file_path: str, insert_time: float = 0.0, time_stretch_playrate: Optional[float] = None) -> Dict[str, Any]:
     """Import a sample onto the given track at time position. Optionally set take playrate for time-stretching.
 
-    time_stretch_playrate: if provided, sets the active take's D_PLAYRATE to this value (1.0 = no stretch)
+    Args:
+        track_index: Track index (0-based) to import sample to
+        file_path: Full path to the audio file to import
+        insert_time: Time position in seconds to insert the sample
+        time_stretch_playrate: If provided, sets the active take's playback rate (1.0 = no stretch, 2.0 = double speed)
+    
+    Note: If you receive a 422 error, ensure numeric parameters (track_index, insert_time, time_stretch_playrate)
+          are sent as numbers, not strings.
     """
+    logger.info(f"import_sample_to_track called with track_index={track_index}, file_path={file_path}, "
+                f"insert_time={insert_time}, time_stretch_playrate={time_stretch_playrate}")
     if not Path(file_path).is_file():
-        return {"error": f"File not found: {file_path}"}
+        error_msg = f"File not found: {file_path}"
+        logger.warning(error_msg)
+        return {"error": error_msg}
     try:
         project = reapy.Project()
         tracks = list(project.tracks)
         if track_index < 0 or track_index >= len(tracks):
-            return {"error": f"Track index out of range: {track_index}"}
+            error_msg = f"Track index out of range: {track_index} (valid: 0-{len(tracks)-1})"
+            logger.warning(error_msg)
+            return {"error": error_msg}
         track = tracks[track_index]
         # Insert audio item at the specified position
         item = track.add_audio_item(file_path=file_path, position=float(insert_time))
         if time_stretch_playrate is not None:
             take = item.active_take
             take.playback_rate = float(time_stretch_playrate)
+        logger.info(f"Successfully imported sample to track {track_index} at time {insert_time}")
         return {"ok": True}
     except Exception as e:
-        return {"error": f"Failed to import sample: {e}"}
+        error_msg = f"Failed to import sample: {e}"
+        logger.error(error_msg, exc_info=True)
+        return {"error": error_msg}

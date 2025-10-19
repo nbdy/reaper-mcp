@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import tempfile
 import base64 as _b64
@@ -9,6 +10,8 @@ import pretty_midi as pm
 import reapy
 
 from reaper_mcp.mcp_core import mcp
+
+logger = logging.getLogger(__name__)
 
 
 @mcp.tool()
@@ -20,15 +23,24 @@ def add_midi_to_track(
 ) -> Dict[str, Any]:
     """Add a list of MIDI notes to a track as a new MIDI item.
 
-    notes: list of dicts with keys: start (s), end (s), pitch (0-127), velocity (1-127), channel (0-15)
-    start_time: offset seconds for the item
-    quantize_qn: if provided, quantize note starts/ends to this quarter-note grid
+    Args:
+        track_index: Track index (0-based) to add MIDI to
+        notes: List of dicts with keys: start (s), end (s), pitch (0-127), velocity (1-127), channel (0-15)
+        start_time: Offset seconds for the item
+        quantize_qn: If provided, quantize note starts/ends to this quarter-note grid
+    
+    Note: If you receive a 422 error, ensure numeric parameters (track_index, start_time, quantize_qn)
+          are sent as numbers, not strings.
     """
+    logger.info(f"add_midi_to_track called with track_index={track_index}, start_time={start_time}, "
+                f"quantize_qn={quantize_qn}, notes count={len(notes) if notes else 0}")
     try:
         project = reapy.Project()
         tracks = list(project.tracks)
         if track_index < 0 or track_index >= len(tracks):
-            return {"error": f"Track index out of range: {track_index}"}
+            error_msg = f"Track index out of range: {track_index} (valid: 0-{len(tracks)-1})"
+            logger.warning(error_msg)
+            return {"error": error_msg}
         track = tracks[track_index]
         item_start = float(start_time)
         item_length = max((float(n["end"]) for n in notes), default=0.0)
@@ -42,9 +54,12 @@ def add_midi_to_track(
             pitch = int(nd.get("pitch", 60))
             velocity = int(nd.get("velocity", 100))
             item.add_note(pitch=pitch, start=start, end=end, velocity=velocity, channel=channel)
+        logger.info(f"Successfully added {len(notes)} MIDI notes to track {track_index}")
         return {"ok": True}
     except Exception as e:
-        return {"error": f"Failed to add MIDI: {e}"}
+        error_msg = f"Failed to add MIDI: {e}"
+        logger.error(error_msg, exc_info=True)
+        return {"error": error_msg}
 
 
 @mcp.tool()
@@ -150,12 +165,24 @@ def generate_pretty_midi(
 
 @mcp.tool()
 def add_midi_file_to_track(track_index: int, midi_base64: str, insert_time: float = 0.0) -> Dict[str, Any]:
-    """Import a MIDI file (base64-encoded .mid data) onto the given track at time position."""
+    """Import a MIDI file (base64-encoded .mid data) onto the given track at time position.
+    
+    Args:
+        track_index: Track index (0-based) to add MIDI file to
+        midi_base64: Base64-encoded MIDI file data
+        insert_time: Time position in seconds to insert the MIDI
+    
+    Note: If you receive a 422 error, ensure numeric parameters (track_index, insert_time)
+          are sent as numbers, not strings.
+    """
+    logger.info(f"add_midi_file_to_track called with track_index={track_index}, insert_time={insert_time}")
     try:
         project = reapy.Project()
         tracks = list(project.tracks)
         if track_index < 0 or track_index >= len(tracks):
-            return {"error": f"Track index out of range: {track_index}"}
+            error_msg = f"Track index out of range: {track_index} (valid: 0-{len(tracks)-1})"
+            logger.warning(error_msg)
+            return {"error": error_msg}
         track = tracks[track_index]
 
         # Decode to temp file
@@ -165,6 +192,7 @@ def add_midi_file_to_track(track_index: int, midi_base64: str, insert_time: floa
             temp_path = tf.name
         try:
             track.add_audio_item(file_path=temp_path, position=float(insert_time))
+            logger.info(f"Successfully added MIDI file to track {track_index} at time {insert_time}")
             return {"ok": True}
         finally:
             try:
@@ -172,4 +200,6 @@ def add_midi_file_to_track(track_index: int, midi_base64: str, insert_time: floa
             except Exception:
                 pass
     except Exception as e:
-        return {"error": f"Failed to add MIDI file: {e}"}
+        error_msg = f"Failed to add MIDI file: {e}"
+        logger.error(error_msg, exc_info=True)
+        return {"error": error_msg}

@@ -1,5 +1,12 @@
 import argparse
+import logging
 from reaper_mcp.mcp_core import mcp
+
+# Configure logging to help debug validation errors
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 # Import tool modules so their @mcp.tool functions register
 from reaper_mcp import project as _project  # noqa: F401
@@ -35,7 +42,8 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for the reaper-mcp CLI."""
     args = _parse_args()
 
     # Build kwargs for mcp.run without signature inspection; FastMCP.run accepts **kwargs
@@ -62,3 +70,7 @@ if __name__ == "__main__":
 
     # Start the MCP server
     mcp.run(**kw)
+
+
+if __name__ == "__main__":
+    main()
