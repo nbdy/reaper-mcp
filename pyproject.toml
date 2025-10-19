@@ -1,0 +1,11 @@
+[project]
+name = "reaper-mcp"
+version = "0.1.0"
+description = "MCP server for REAPER DAW: project, tracks, MIDI, FX, samples."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=2.12.5",
+    "python-reapy>=0.10.0",
+    "pretty-midi>=0.2.10",
+]
