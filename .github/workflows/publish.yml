@@ -47,10 +47,5 @@ jobs:
           name: dist
           path: dist
 
-      - name: Set up uv (with Python 3.11)
-        uses: astral-sh/setup-uv@v6
-
-      - name: Publish to PyPI with uv
-        env:
-          PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-        run: uv publish dist/* --token "${PYPI_API_TOKEN}"
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
