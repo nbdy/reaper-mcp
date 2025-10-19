@@ -3,21 +3,24 @@ Reaper MCP Server
 
 This server exposes small, focused tools to automate common REAPER tasks via reapy / ReaScript.
 
-Notes
-- You must run REAPER with ReaScript enabled and have the `python-reapy` bridge configured for out-of-process control.
-- Tools are designed to be small and encapsulated. Prefer calling multiple small tools over one large combined action.
-- Paths must be accessible from the REAPER host machine.
-
 Available Tools
 
 Project:
 - get_project_details: Get basic project details (bpm, track count, track names)
 - new_project: Initialize the current project (optionally clearing all tracks)
+- get_project_length: Get the project length in seconds
+- save_project: Save the current project
+- get_play_state: Get the current playback state (playing, paused, stopped, recording)
+- get_play_position: Get the current play position in seconds
+- get_play_rate: Get the current playback rate (1.0 is normal speed)
 
 Tracks:
 - create_track: Create a new track at optional index; returns its index
 - delete_track: Delete track by index
 - list_tracks: List tracks with indices and names
+- get_track_name: Get the name of a track by index
+- get_track_item_count: Get the number of items on a track by index
+- set_track_color: Set the color of a track by index (RGB tuple, 0-255)
 
 Tempo:
 - get_bpm: Get current project BPM

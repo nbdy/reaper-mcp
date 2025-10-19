@@ -7,11 +7,19 @@ A Model Context Protocol (MCP) server that provides programmatic control over [R
 ### 🎵 Project Management
 - Get project details (BPM, track count, track names)
 - Initialize new projects with optional track clearing
+- Get project length in seconds
+- Save the current project
+- Get playback state (playing, paused, stopped, recording)
+- Get current play position in seconds
+- Get current playback rate
 
 ### 🎚️ Track Operations
 - Create tracks at specific indices
 - Delete tracks by index
 - List all tracks with names
+- Get track name by index
+- Get track item count by index
+- Set track color by index (RGB values)
 
 ### ⏱️ Tempo Control
 - Get current project BPM

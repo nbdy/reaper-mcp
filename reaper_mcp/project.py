@@ -33,3 +33,63 @@ def new_project(clear_tracks: bool = True) -> Dict[str, Any]:
         return {"ok": True}
     except Exception as e:
         return {"error": f"Failed to initialize project: {e}"}
+
+
+@mcp.tool()
+def get_project_length() -> Dict[str, Any]:
+    """Get the project length in seconds."""
+    try:
+        project = reapy.Project()
+        length = project.length
+        return {"length": length}
+    except Exception as e:
+        return {"error": f"Failed to get project length: {e}"}
+
+
+@mcp.tool()
+def save_project() -> Dict[str, Any]:
+    """Save the current project."""
+    try:
+        project = reapy.Project()
+        project.save()
+        return {"ok": True}
+    except Exception as e:
+        return {"error": f"Failed to save project: {e}"}
+
+
+@mcp.tool()
+def get_play_state() -> Dict[str, Any]:
+    """Get the current playback state (playing, paused, stopped, recording)."""
+    try:
+        project = reapy.Project()
+        state = {
+            "is_playing": project.is_playing,
+            "is_paused": project.is_paused,
+            "is_stopped": project.is_stopped,
+            "is_recording": project.is_recording
+        }
+        return state
+    except Exception as e:
+        return {"error": f"Failed to get play state: {e}"}
+
+
+@mcp.tool()
+def get_play_position() -> Dict[str, Any]:
+    """Get the current play position in seconds."""
+    try:
+        project = reapy.Project()
+        position = project.play_position
+        return {"position": position}
+    except Exception as e:
+        return {"error": f"Failed to get play position: {e}"}
+
+
+@mcp.tool()
+def get_play_rate() -> Dict[str, Any]:
+    """Get the current playback rate (1.0 is normal speed)."""
+    try:
+        project = reapy.Project()
+        rate = project.play_rate
+        return {"rate": rate}
+    except Exception as e:
+        return {"error": f"Failed to get play rate: {e}"}
