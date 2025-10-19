@@ -4,8 +4,10 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import reapy
+
 from reaper_mcp.mcp_core import mcp
-from reaper_mcp.util import RPR, _load_sample_dirs, _save_sample_dirs
+from reaper_mcp.util import _load_sample_dirs, _save_sample_dirs
 
 
 @mcp.tool()
@@ -74,24 +76,16 @@ def import_sample_to_track(track_index: int, file_path: str, insert_time: float 
     if not Path(file_path).is_file():
         return {"error": f"File not found: {file_path}"}
     try:
-        # Ensure track exists by selecting it
-        n = int(RPR.CountTracks(0))
-        if track_index < 0 or track_index >= n:
+        project = reapy.Project()
+        tracks = list(project.tracks)
+        if track_index < 0 or track_index >= len(tracks):
             return {"error": f"Track index out of range: {track_index}"}
-        tr = RPR.GetTrack(0, track_index)
-        # Move edit cursor
-        RPR.SetEditCurPos(float(insert_time), False, False)
-        # Select track and insert media (flag 0 = at edit cursor, obey tempo)
-        RPR.SetOnlyTrackSelected(tr)
-        ok = RPR.InsertMedia(file_path, 0)
-        if int(ok) != 1:
-            return {"error": "InsertMedia failed"}
-        # Get the newly selected item
-        item = RPR.GetSelectedMediaItem(0, 0)
-        if item and time_stretch_playrate is not None:
-            take = RPR.GetActiveTake(item)
-            RPR.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", float(time_stretch_playrate))
-        RPR.UpdateArrange()
+        track = tracks[track_index]
+        # Insert audio item at the specified position
+        item = track.add_audio_item(file_path=file_path, position=float(insert_time))
+        if time_stretch_playrate is not None:
+            take = item.active_take
+            take.playback_rate = float(time_stretch_playrate)
         return {"ok": True}
     except Exception as e:
         return {"error": f"Failed to import sample: {e}"}

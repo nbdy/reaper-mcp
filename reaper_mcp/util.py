@@ -7,9 +7,8 @@ from typing import Any, Dict, List, Optional
 
 # Top-level imports for performance/simplicity
 import reapy
-# Mandatory configuration per python-reapy docs; must run before importing reascript_api
+# Mandatory configuration per python-reapy docs
 reapy.configure_reaper()
-from reapy import reascript_api as RPR
 
 # ----------------------
 # Utilities & constants
@@ -46,7 +45,6 @@ class Note:
 
 
 __all__ = [
-    "RPR",
     "PACKAGE_DIR",
     "SAMPLE_DIRS_FILE",
     "_load_sample_dirs",

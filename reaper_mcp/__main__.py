@@ -1,5 +1,4 @@
 import argparse
-import inspect
 from reaper_mcp.mcp_core import mcp
 
 # Import tool modules so their @mcp.tool functions register
@@ -39,32 +38,27 @@ def _parse_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = _parse_args()
 
-    # Build kwargs for mcp.run based on its accepted signature to avoid incompatibility
-    sig = inspect.signature(mcp.run)
-    accepted = set(sig.parameters.keys())
-    kw = {}
+    # Build kwargs for mcp.run without signature inspection; FastMCP.run accepts **kwargs
+    kw = {"show_banner": False}
 
     # Normalize some transport aliases
     transport = args.transport
     if transport == "http":
-        # Many MCP servers implement HTTP via SSE; prefer 'sse' if supported
+        # Many MCP servers implement HTTP via SSE; prefer 'sse'
         transport = "sse"
     if transport == "websocket":
         transport = "ws"
 
-    if "transport" in accepted:
-        kw["transport"] = transport
+    kw["transport"] = transport
 
-    # Only add networking options if the run() signature supports them
+    # Add networking options for non-stdio transports.
     if transport != "stdio":
-        if "host" in accepted:
-            kw["host"] = args.host
-        if "port" in accepted:
-            kw["port"] = args.port
-        if args.path is not None and "path" in accepted:
+        kw["host"] = args.host
+        kw["port"] = args.port
+        if args.path is not None:
             kw["path"] = args.path
-        if args.allow_origins is not None and "allow_origins" in accepted:
-            kw["allow_origins"] = args.allow_origins
+        #if args.allow_origins is not None:
+            #kw["allow_origins"] = args.allow_origins
 
     # Start the MCP server
     mcp.run(**kw)

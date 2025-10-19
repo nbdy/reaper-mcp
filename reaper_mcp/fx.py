@@ -3,15 +3,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, List
 
+import reapy
+
 from reaper_mcp.mcp_core import mcp
-from reaper_mcp.util import RPR
 
 
 @mcp.tool()
 def list_vst_plugins() -> Dict[str, Any]:
     """List available VST plugins by parsing REAPER resource files (vstplugins*.ini)."""
     try:
-        resource = RPR.GetResourcePath()
+        resource = reapy.get_resource_path()
         base = Path(resource)
         candidates = [
             base / "reaper-vstplugins64.ini",
@@ -37,14 +38,15 @@ def list_vst_plugins() -> Dict[str, Any]:
 def add_fx_to_track(track_index: int, fx_name: str, record_fx_chain: bool = False) -> Dict[str, Any]:
     """Add an FX/VST by name to a track. fx_name must match REAPER's FX browser name (e.g., 'VST3: ReaComp (Cockos)')."""
     try:
-        n = int(RPR.CountTracks(0))
-        if track_index < 0 or track_index >= n:
+        project = reapy.Project()
+        tracks = list(project.tracks)
+        if track_index < 0 or track_index >= len(tracks):
             return {"error": f"Track index out of range: {track_index}"}
-        tr = RPR.GetTrack(0, track_index)
-        rec_fx = 1 if record_fx_chain else 0
-        fx_index = int(RPR.TrackFX_AddByName(tr, fx_name, rec_fx, 1))
-        if fx_index < 0:
+        track = tracks[track_index]
+        fx = track.add_fx(name=fx_name, even_if_exists=True)
+        if fx is None:
             return {"error": f"FX not found or could not be added: {fx_name}"}
+        fx_index = fx.index
         return {"track_index": track_index, "fx_index": fx_index}
     except Exception as e:
         return {"error": f"Failed to add FX: {e}"}
@@ -54,16 +56,14 @@ def add_fx_to_track(track_index: int, fx_name: str, record_fx_chain: bool = Fals
 def list_fx_on_track(track_index: int) -> Dict[str, Any]:
     """List FX names on a given track."""
     try:
-        n = int(RPR.CountTracks(0))
-        if track_index < 0 or track_index >= n:
+        project = reapy.Project()
+        tracks = list(project.tracks)
+        if track_index < 0 or track_index >= len(tracks):
             return {"error": f"Track index out of range: {track_index}"}
-        tr = RPR.GetTrack(0, track_index)
-        fx_count = int(RPR.TrackFX_GetCount(tr))
+        track = tracks[track_index]
         fx = []
-        for i in range(fx_count):
-            buf = RPR.TrackFX_GetFXName(tr, i, "", 4096)
-            name = buf[3] if isinstance(buf, tuple) and len(buf) >= 4 else str(buf)
-            fx.append({"index": i, "name": name})
+        for i, fx_obj in enumerate(track.fxs):
+            fx.append({"index": i, "name": fx_obj.name})
         return {"fx": fx}
     except Exception as e:
         return {"error": f"Failed to list FX: {e}"}
@@ -73,9 +73,15 @@ def list_fx_on_track(track_index: int) -> Dict[str, Any]:
 def set_fx_param(track_index: int, fx_index: int, param_index: int, value_normalized: float) -> Dict[str, Any]:
     """Set an FX parameter (normalized 0..1)."""
     try:
-        tr = RPR.GetTrack(0, int(track_index))
-        ok = RPR.TrackFX_SetParamNormalized(tr, int(fx_index), int(param_index), float(value_normalized))
-        return {"ok": bool(ok)}
+        project = reapy.Project()
+        tracks = list(project.tracks)
+        track = tracks[int(track_index)]
+        fxs = list(track.fxs)
+        fx = fxs[int(fx_index)]
+        params = list(fx.params)
+        param = params[int(param_index)]
+        param.normalized = float(value_normalized)
+        return {"ok": True}
     except Exception as e:
         return {"error": f"Failed to set FX param: {e}"}
 
@@ -84,10 +90,13 @@ def set_fx_param(track_index: int, fx_index: int, param_index: int, value_normal
 def get_fx_param(track_index: int, fx_index: int, param_index: int) -> Dict[str, Any]:
     """Get an FX parameter value and name."""
     try:
-        tr = RPR.GetTrack(0, int(track_index))
-        val = float(RPR.TrackFX_GetParamNormalized(tr, int(fx_index), int(param_index)))
-        buf = RPR.TrackFX_GetParamName(tr, int(fx_index), int(param_index), "", 4096)
-        name = buf[4] if isinstance(buf, tuple) and len(buf) >= 5 else str(buf)
-        return {"value_normalized": val, "name": name}
+        project = reapy.Project()
+        tracks = list(project.tracks)
+        track = tracks[int(track_index)]
+        fxs = list(track.fxs)
+        fx = fxs[int(fx_index)]
+        params = list(fx.params)
+        param = params[int(param_index)]
+        return {"value_normalized": param.normalized, "name": param.name}
     except Exception as e:
         return {"error": f"Failed to get FX param: {e}"}

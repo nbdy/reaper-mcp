@@ -6,9 +6,9 @@ import base64 as _b64
 from typing import Any, Dict, List, Optional
 
 import pretty_midi as pm
+import reapy
 
 from reaper_mcp.mcp_core import mcp
-from reaper_mcp.util import RPR
 
 
 @mcp.tool()
@@ -25,42 +25,23 @@ def add_midi_to_track(
     quantize_qn: if provided, quantize note starts/ends to this quarter-note grid
     """
     try:
-        n = int(RPR.CountTracks(0))
-        if track_index < 0 or track_index >= n:
+        project = reapy.Project()
+        tracks = list(project.tracks)
+        if track_index < 0 or track_index >= len(tracks):
             return {"error": f"Track index out of range: {track_index}"}
-        tr = RPR.GetTrack(0, track_index)
+        track = tracks[track_index]
         item_start = float(start_time)
-        item_end = item_start + max((float(n["end"]) for n in notes), default=0.0)
+        item_length = max((float(n["end"]) for n in notes), default=0.0)
         # Create new MIDI item in project
-        item = RPR.CreateNewMIDIItemInProj(tr, item_start, item_end, False)
-        take = RPR.GetActiveTake(item)
-        if int(RPR.TakeIsMIDI(take)) != 1:
-            return {"error": "Failed to create MIDI take."}
+        item = track.add_midi_item(start=item_start, length=item_length)
         # Insert notes
         for nd in notes:
-            s = float(nd.get("start", 0.0)) + item_start
-            e = float(nd.get("end", s + 0.25)) + item_start
-            if quantize_qn is not None and quantize_qn > 0:
-                ppq_s = RPR.MIDI_GetPPQPosFromProjTime(take, s)
-                ppq_e = RPR.MIDI_GetPPQPosFromProjTime(take, e)
-            else:
-                ppq_s = RPR.MIDI_GetPPQPosFromProjTime(take, s)
-                ppq_e = RPR.MIDI_GetPPQPosFromProjTime(take, e)
-            chan = int(nd.get("channel", 0))
+            start = float(nd.get("start", 0.0))
+            end = float(nd.get("end", start + 0.25))
+            channel = int(nd.get("channel", 0))
             pitch = int(nd.get("pitch", 60))
-            vel = int(nd.get("velocity", 100))
-            RPR.MIDI_InsertNote(
-                take,
-                False,
-                False,
-                ppq_s,
-                ppq_e,
-                chan,
-                pitch,
-                vel,
-                False,
-            )
-        RPR.MIDI_Sort(take)
+            velocity = int(nd.get("velocity", 100))
+            item.add_note(pitch=pitch, start=start, end=end, velocity=velocity, channel=channel)
         return {"ok": True}
     except Exception as e:
         return {"error": f"Failed to add MIDI: {e}"}
@@ -82,11 +63,11 @@ def generate_midi_pattern(
         steps = bars * steps_per_bar
         qn_per_step = 4.0 / steps_per_bar
         bpm = 120.0
-        if RPR is not None:
-            try:
-                bpm = float(RPR.TimeMap_GetDividedBpmAtTime(0.0))
-            except Exception:
-                pass
+        try:
+            project = reapy.Project()
+            bpm = project.bpm
+        except Exception:
+            pass
         sec_per_qn = 60.0 / bpm
         # Simple scale intervals
         scales = {
@@ -131,11 +112,11 @@ def generate_pretty_midi(
     try:
         # Determine BPM from REAPER if possible
         bpm = 120.0
-        if RPR is not None:
-            try:
-                bpm = float(RPR.TimeMap_GetDividedBpmAtTime(0.0))
-            except Exception:
-                pass
+        try:
+            project = reapy.Project()
+            bpm = project.bpm
+        except Exception:
+            pass
         steps = max(1, int(bars * steps_per_bar))
         qn_per_step = 4.0 / steps_per_bar
         sec_per_qn = 60.0 / bpm
@@ -171,10 +152,11 @@ def generate_pretty_midi(
 def add_midi_file_to_track(track_index: int, midi_base64: str, insert_time: float = 0.0) -> Dict[str, Any]:
     """Import a MIDI file (base64-encoded .mid data) onto the given track at time position."""
     try:
-        n = int(RPR.CountTracks(0))
-        if track_index < 0 or track_index >= n:
+        project = reapy.Project()
+        tracks = list(project.tracks)
+        if track_index < 0 or track_index >= len(tracks):
             return {"error": f"Track index out of range: {track_index}"}
-        tr = RPR.GetTrack(0, track_index)
+        track = tracks[track_index]
 
         # Decode to temp file
         data = _b64.b64decode(midi_base64.encode("ascii"))
@@ -182,12 +164,7 @@ def add_midi_file_to_track(track_index: int, midi_base64: str, insert_time: floa
             tf.write(data)
             temp_path = tf.name
         try:
-            RPR.SetEditCurPos(float(insert_time), False, False)
-            RPR.SetOnlyTrackSelected(tr)
-            ok = RPR.InsertMedia(temp_path, 0)
-            if int(ok) != 1:
-                return {"error": "InsertMedia failed for MIDI"}
-            RPR.UpdateArrange()
+            track.add_audio_item(file_path=temp_path, position=float(insert_time))
             return {"ok": True}
         finally:
             try:
