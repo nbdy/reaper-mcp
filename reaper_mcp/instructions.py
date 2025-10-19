@@ -13,6 +13,33 @@ Project:
 - get_play_state: Get the current playback state (playing, paused, stopped, recording)
 - get_play_position: Get the current play position in seconds
 - get_play_rate: Get the current playback rate (1.0 is normal speed)
+- get_project_name: Get the project name
+- get_project_path: Get the project file path
+- is_project_dirty: Check if the project has unsaved changes
+- undo: Undo the last action
+- redo: Redo the last undone action
+- can_undo: Check if undo is available
+- can_redo: Check if redo is available
+- beats_to_time: Convert beats (quarter notes) to time in seconds
+- time_to_beats: Convert time in seconds to beats (quarter notes)
+
+Playback Control:
+- play: Start playback
+- pause: Pause playback
+- stop: Stop playback
+- record: Start recording
+- get_cursor_position: Get the edit cursor position in seconds
+- set_cursor_position: Set the edit cursor position in seconds
+- get_time_selection: Get the current time selection (start, end, length)
+- set_time_selection: Set the time selection range (start, end)
+
+Markers & Regions:
+- add_marker: Add a marker at a specific time position
+- add_region: Add a region between start and end times
+- list_markers: List all markers with details (index, position, name, color)
+- list_regions: List all regions with details (index, start, end, name, color)
+- get_marker_count: Get the number of markers in the project
+- get_region_count: Get the number of regions in the project
 
 Tracks:
 - create_track: Create a new track at optional index; returns its index
@@ -21,6 +48,16 @@ Tracks:
 - get_track_name: Get the name of a track by index
 - get_track_item_count: Get the number of items on a track by index
 - set_track_color: Set the color of a track by index (RGB tuple, 0-255)
+- mute_track: Mute a track by index
+- unmute_track: Unmute a track by index
+- solo_track: Solo a track by index
+- unsolo_track: Unsolo a track by index
+- get_track_volume: Get track volume (0.0 to 2.0+, where 1.0 = 0dB)
+- set_track_volume: Set track volume (0.0 to 2.0+, where 1.0 = 0dB)
+- get_track_pan: Get track pan (-1.0 = left, 0.0 = center, 1.0 = right)
+- set_track_pan: Set track pan (-1.0 to 1.0)
+- select_track: Select a track by index
+- unselect_track: Unselect a track by index
 
 Tempo:
 - get_bpm: Get current project BPM

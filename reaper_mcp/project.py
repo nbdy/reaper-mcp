@@ -93,3 +93,144 @@ def get_play_rate() -> Dict[str, Any]:
         return {"rate": rate}
     except Exception as e:
         return {"error": f"Failed to get play rate: {e}"}
+
+
+@mcp.tool()
+def undo() -> Dict[str, Any]:
+    """Undo the last action in REAPER.
+    
+    Returns:
+        Dict with ok status on success or error message
+    """
+    try:
+        project = reapy.Project()
+        project.undo()
+        return {"ok": True, "action": "undo"}
+    except Exception as e:
+        return {"error": f"Failed to undo: {e}"}
+
+
+@mcp.tool()
+def redo() -> Dict[str, Any]:
+    """Redo the last undone action in REAPER.
+    
+    Returns:
+        Dict with ok status on success or error message
+    """
+    try:
+        project = reapy.Project()
+        project.redo()
+        return {"ok": True, "action": "redo"}
+    except Exception as e:
+        return {"error": f"Failed to redo: {e}"}
+
+
+@mcp.tool()
+def can_undo() -> Dict[str, Any]:
+    """Check if undo is available.
+    
+    Returns:
+        Dict with can_undo boolean
+    """
+    try:
+        project = reapy.Project()
+        can_undo_val = project.can_undo()
+        return {"can_undo": can_undo_val}
+    except Exception as e:
+        return {"error": f"Failed to check undo availability: {e}"}
+
+
+@mcp.tool()
+def can_redo() -> Dict[str, Any]:
+    """Check if redo is available.
+    
+    Returns:
+        Dict with can_redo boolean
+    """
+    try:
+        project = reapy.Project()
+        can_redo_val = project.can_redo()
+        return {"can_redo": can_redo_val}
+    except Exception as e:
+        return {"error": f"Failed to check redo availability: {e}"}
+
+
+@mcp.tool()
+def beats_to_time(beats: float) -> Dict[str, Any]:
+    """Convert beats to time in seconds.
+    
+    Args:
+        beats: Number of beats (quarter notes)
+    
+    Returns:
+        Dict with time in seconds
+    """
+    try:
+        project = reapy.Project()
+        time = project.beats_to_time(float(beats))
+        return {"beats": beats, "time": time}
+    except Exception as e:
+        return {"error": f"Failed to convert beats to time: {e}"}
+
+
+@mcp.tool()
+def time_to_beats(time: float) -> Dict[str, Any]:
+    """Convert time in seconds to beats.
+    
+    Args:
+        time: Time in seconds
+    
+    Returns:
+        Dict with beats (quarter notes)
+    """
+    try:
+        project = reapy.Project()
+        beats = project.time_to_beats(float(time))
+        return {"time": time, "beats": beats}
+    except Exception as e:
+        return {"error": f"Failed to convert time to beats: {e}"}
+
+
+@mcp.tool()
+def get_project_name() -> Dict[str, Any]:
+    """Get the project name.
+    
+    Returns:
+        Dict with project name
+    """
+    try:
+        project = reapy.Project()
+        name = project.name
+        return {"name": name}
+    except Exception as e:
+        return {"error": f"Failed to get project name: {e}"}
+
+
+@mcp.tool()
+def get_project_path() -> Dict[str, Any]:
+    """Get the project file path.
+    
+    Returns:
+        Dict with project path (empty string if not saved)
+    """
+    try:
+        project = reapy.Project()
+        path = project.path
+        return {"path": path}
+    except Exception as e:
+        return {"error": f"Failed to get project path: {e}"}
+
+
+@mcp.tool()
+def is_project_dirty() -> Dict[str, Any]:
+    """Check if the project has unsaved changes.
+    
+    Returns:
+        Dict with is_dirty boolean
+    """
+    try:
+        project = reapy.Project()
+        dirty = project.is_dirty()
+        return {"is_dirty": dirty}
+    except Exception as e:
+        return {"error": f"Failed to check project dirty status: {e}"}

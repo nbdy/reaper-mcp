@@ -12,6 +12,22 @@ A Model Context Protocol (MCP) server that provides programmatic control over [R
 - Get playback state (playing, paused, stopped, recording)
 - Get current play position in seconds
 - Get current playback rate
+- Get project name and file path
+- Check for unsaved changes (dirty status)
+- Undo/redo operations with availability checks
+- Convert between beats and time (seconds)
+
+### ▶️ Playback Control
+- Start, pause, stop playback
+- Start recording
+- Get/set edit cursor position
+- Get/set time selection range
+
+### 🔖 Markers & Regions
+- Add markers at specific time positions
+- Add regions between start and end times
+- List all markers and regions with details
+- Get marker and region counts
 
 ### 🎚️ Track Operations
 - Create tracks at specific indices
@@ -20,6 +36,11 @@ A Model Context Protocol (MCP) server that provides programmatic control over [R
 - Get track name by index
 - Get track item count by index
 - Set track color by index (RGB values)
+- Mute/unmute tracks
+- Solo/unsolo tracks
+- Get/set track volume (0dB = 1.0)
+- Get/set track pan (-1.0 to 1.0)
+- Select/unselect tracks
 
 ### ⏱️ Tempo Control
 - Get current project BPM
