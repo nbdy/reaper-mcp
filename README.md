@@ -64,9 +64,12 @@ uv tool run mcpo --port 8000 -- uv run reaper_mcp
 python -m reaper_mcp --transport ws --port 9000
 ```
 
-## Claude Desktop Configuration
+## MCP Client Configuration
 
-Add to your Claude Desktop MCP settings:
+<details>
+<summary><b>Claude Desktop</b></summary>
+
+Add to `claude_desktop_config.json`:
 
 ```json
 {
@@ -79,7 +82,50 @@ Add to your Claude Desktop MCP settings:
 }
 ```
 
-For uv, use `"command": "uv"` with `"args": ["run", "python", "-m", "reaper_mcp"]`
+</details>
+
+<details>
+<summary><b>Cline (VS Code)</b></summary>
+
+Add to MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "reaper": {
+      "command": "python",
+      "args": ["-m", "reaper_mcp"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Continue (VS Code)</b></summary>
+
+Add to `config.json`:
+
+```json
+{
+  "mcpServers": {
+    "reaper": {
+      "command": "python",
+      "args": ["-m", "reaper_mcp"]
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Using uv</b></summary>
+
+For any client, replace `"command": "python"` with `"command": "uv"` and `"args": ["run", "python", "-m", "reaper_mcp"]`
+
+</details>
 
 ## Notes
 
