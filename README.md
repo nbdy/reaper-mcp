@@ -19,7 +19,7 @@ A Model Context Protocol (MCP) server that provides programmatic control over [R
 - **python-reapy** bridge configured for out-of-process control
 - **Python 3.11+**
 
-> **Note:** The server must be able to communicate with REAPER through the reapy bridge. Ensure REAPER is running and reapy is properly configured before starting the server.
+> **Note:** The server must be able to communicate with REAPER. Ensure REAPER is running before starting the server.
 
 ## Installation
 
